@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="VoxMel: Wavelet-Factorized Autoregressive Mel-Spectrogram Modeling for Zero-Shot Speech Synthesis. Listen to audio samples and explore generated waveforms and Mel spectrograms.">
+<title>VoxMel — Zero-Shot Speech Synthesis</title>
+<style>
+  :root {
+    --ink: #15162b;
+    --muted: #666b85;
+    --line: #e5e7f0;
+    --surface: #ffffff;
+    --soft: #f6f7fb;
+    --accent: #6558d3;
+    --accent-dark: #493bb5;
+    --accent-soft: #eeebff;
+    --mint: #42c9b0;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--surface);
+    font: 15px/1.65 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  button { font: inherit; }
+  .container { width: min(1180px, calc(100% - 48px)); margin: 0 auto; }
+  .nav {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(255, 255, 255, .88);
+    border-bottom: 1px solid rgba(229, 231, 240, .85);
+    backdrop-filter: blur(16px);
+  }
+  .nav-inner { height: 68px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; font-weight: 750; letter-spacing: -.02em; }
+  .brand-mark {
+    width: 31px; height: 31px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center; gap: 2px;
+    background: var(--ink);
+  }
+  .brand-mark i { display: block; width: 2px; border-radius: 2px; background: #fff; }
+  .brand-mark i:nth-child(1), .brand-mark i:nth-child(5) { height: 7px; }
+  .brand-mark i:nth-child(2), .brand-mark i:nth-child(4) { height: 14px; }
+  .brand-mark i:nth-child(3) { height: 20px; background: var(--mint); }
+  .nav-links { display: flex; align-items: center; gap: 28px; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 550; }
+  .nav-links a:hover { color: var(--accent); }
+  .hero { position: relative; overflow: hidden; padding: 90px 0 84px; background: var(--soft); }
+  .hero::before {
+    content: ""; position: absolute; width: 620px; height: 620px; right: -100px; top: -280px;
+    border-radius: 50%; background: radial-gradient(circle, rgba(101,88,211,.18), rgba(101,88,211,0) 68%);
+  }
+  .hero::after {
+    content: ""; position: absolute; width: 400px; height: 400px; left: -210px; bottom: -260px;
+    border-radius: 50%; background: radial-gradient(circle, rgba(66,201,176,.16), rgba(66,201,176,0) 70%);
+  }
+  .hero-inner { position: relative; z-index: 1; display: grid; grid-template-columns: 1.25fr .75fr; gap: 70px; align-items: center; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--accent-dark); font-size: 12px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
+  .eyebrow::before { content: ""; width: 20px; height: 2px; background: var(--accent); }
+  h1 { margin: 16px 0 20px; font-size: clamp(52px, 7vw, 82px); line-height: .98; letter-spacing: -.065em; font-weight: 780; }
+  .hero-title { max-width: 670px; margin: 0; font-size: clamp(22px, 2.5vw, 31px); line-height: 1.27; letter-spacing: -.025em; font-weight: 520; }
+  .hero-title em { color: var(--accent); font-style: normal; }
+  .hero-copy { max-width: 620px; margin: 24px 0 0; color: var(--muted); font-size: 16px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 28px; }
+  .hero-tags span { padding: 6px 12px; border: 1px solid #dedfeb; border-radius: 100px; color: #555b74; background: rgba(255,255,255,.65); font-size: 12px; }
+  .hero-visual { height: 240px; display: flex; align-items: center; justify-content: center; gap: 7px; }
+  .hero-visual i {
+    width: 6px; height: var(--h); border-radius: 8px;
+    background: linear-gradient(to top, var(--accent), #9b8ff0);
+    box-shadow: 0 5px 18px rgba(101,88,211,.15);
+    animation: pulse 3.2s ease-in-out infinite alternate;
+    animation-delay: var(--d);
+  }
+  .hero-visual i:nth-child(4n) { background: linear-gradient(to top, #23a992, var(--mint)); }
+  @keyframes pulse { to { transform: scaleY(.72); opacity: .72; } }
+  main { padding: 76px 0 90px; }
+  section + section { margin-top: 90px; padding-top: 82px; border-top: 1px solid var(--line); }
+  .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 30px; margin-bottom: 30px; }
+  .section-heading h2 { margin: 7px 0 0; font-size: clamp(28px, 4vw, 40px); line-height: 1.15; letter-spacing: -.04em; }
+  .section-description { max-width: 570px; margin: 14px 0 0; color: var(--muted); }
+  .model-note { flex: 0 0 auto; padding: 10px 14px; border-radius: 10px; background: var(--soft); color: var(--muted); font-size: 12px; }
+  .dataset { margin-top: 38px; }
+  .dataset-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .dataset-heading h3 { margin: 0; font-size: 17px; letter-spacing: -.015em; }
+  .language-label { padding: 2px 8px; border-radius: 5px; background: var(--accent-soft); color: var(--accent-dark); font-size: 10px; font-weight: 750; letter-spacing: .08em; }
+  .table-shell { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 30px rgba(25,27,50,.035); }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  th, td { padding: 14px 12px; border-bottom: 1px solid var(--line); text-align: center; vertical-align: middle; white-space: nowrap; }
+  th { background: #fafafd; color: #757a91; font-size: 11px; font-weight: 700; letter-spacing: .025em; }
+  th.ours { color: var(--accent-dark); background: #f5f2ff; }
+  td.ours { background: #fbfaff; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: #fafafd; }
+  tbody tr:hover td.ours { background: #f7f4ff; }
+  td.text { min-width: 250px; max-width: 330px; color: #464b61; text-align: left; white-space: normal; font-size: 13px; line-height: 1.55; }
+  audio { display: block; width: 154px; height: 34px; vertical-align: middle; }
+  .table-hint { margin: 10px 2px 0; color: #8a8fa3; font-size: 11px; }
+  .samples-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin: 28px 0 24px; }
+  .filters { display: inline-flex; padding: 4px; border-radius: 10px; background: var(--soft); }
+  .filter-btn, .view-btn { border: 0; cursor: pointer; color: var(--muted); background: transparent; }
+  .filter-btn { padding: 7px 16px; border-radius: 7px; font-size: 13px; }
+  .filter-btn.active { color: var(--ink); background: #fff; box-shadow: 0 2px 8px rgba(21,22,43,.08); font-weight: 650; }
+  .samples-count { color: #8a8fa3; font-size: 12px; }
+  .sample-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+  .sample-card { overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: #fff; transition: transform .2s, box-shadow .2s; }
+  .sample-card:hover { transform: translateY(-2px); box-shadow: 0 16px 38px rgba(25,27,50,.07); }
+  .sample-card[hidden] { display: none; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 0; }
+  .sample-id { color: #9296aa; font-size: 11px; font-weight: 650; letter-spacing: .09em; text-transform: uppercase; }
+  .emotion { display: none; }
+  .sample-text { min-height: 76px; margin: 13px 20px 18px; color: #3f445a; font-size: 14px; line-height: 1.65; }
+  .audio-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 20px 18px; }
+  .audio-field label, .visual-label { display: block; margin-bottom: 6px; color: #888da1; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+  .audio-field audio { width: 100%; }
+  .visual { display: none; margin: 0 20px 20px; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); }
+  .visual-bar { display: flex; align-items: center; justify-content: space-between; padding: 9px 11px; border-bottom: 1px solid var(--line); background: #fff; }
+  .visual-bar .visual-label { margin: 0; }
+  .view-switch { display: flex; gap: 3px; }
+  .view-btn { padding: 3px 8px; border-radius: 5px; font-size: 10px; }
+  .view-btn.active { color: var(--accent-dark); background: var(--accent-soft); font-weight: 700; }
+  .visual img { display: block; width: 100%; height: 112px; object-fit: cover; }
+  .visual img[hidden] { display: none; }
+  footer { padding: 28px 0; border-top: 1px solid var(--line); color: #888da1; font-size: 12px; }
+  .footer-inner { display: flex; justify-content: space-between; gap: 20px; }
+  @media (max-width: 900px) {
+    .hero-inner { grid-template-columns: 1fr; gap: 30px; }
+    .hero-visual { display: none; }
+    .sample-grid { grid-template-columns: 1fr; }
+    .section-heading { align-items: start; flex-direction: column; }
+  }
+  @media (max-width: 600px) {
+    .container { width: min(100% - 30px, 1180px); }
+    .nav-links { gap: 15px; }
+    .nav-links a { font-size: 12px; }
+    .hero { padding: 62px 0; }
+    main { padding-top: 58px; }
+    .audio-pair { grid-template-columns: 1fr; }
+    .sample-text { min-height: 0; }
+    .samples-toolbar { align-items: flex-start; flex-direction: column; gap: 10px; }
+    section + section { margin-top: 65px; padding-top: 60px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .hero-visual i { animation: none; }
+    .sample-card { transition: none; }
+  }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top" aria-label="VoxMel home">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <span>VoxMel</span>
+    </a>
+    <div class="nav-links">
+      <a href="#results">Zero-Shot TTS</a>
+      <a href="#voice-cloning">Voice Cloning</a>
+      <a href="#samples">More Samples</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container hero-inner">
+    <div>
+      <span class="eyebrow">Audio Samples</span>
+      <h1>VoxMel</h1>
+      <p class="hero-title">Wavelet-Factorized Autoregressive <em>Mel-Spectrogram Modeling</em> for Zero-Shot Speech Synthesis</p>
+      <p class="hero-copy">Explore zero-shot voice cloning and expressive speech synthesis. Listen to the generated audio and inspect its waveform and Mel spectrogram.</p>
+      <div class="hero-tags"><span>Zero-Shot TTS</span><span>Voice Cloning</span><span>Expressive Speech</span><span>Multilingual</span></div>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <i style="--h:32px;--d:-.2s"></i><i style="--h:62px;--d:-1.1s"></i><i style="--h:105px;--d:-.5s"></i><i style="--h:154px;--d:-1.8s"></i><i style="--h:92px;--d:-.8s"></i><i style="--h:190px;--d:-2.2s"></i><i style="--h:128px;--d:-.4s"></i><i style="--h:72px;--d:-1.4s"></i><i style="--h:160px;--d:-.7s"></i><i style="--h:202px;--d:-2s"></i><i style="--h:116px;--d:-.3s"></i><i style="--h:68px;--d:-1.6s"></i><i style="--h:132px;--d:-.9s"></i><i style="--h:86px;--d:-2.1s"></i><i style="--h:44px;--d:-.6s"></i>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <section id="results">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">Benchmark</span>
+        <h2>Main Results on Zero-Shot TTS</h2>
+        <p class="section-description">Zero-shot voice cloning on the Seed-TTS-eval benchmarks. VoxMel is the 690M supervised model; VoxMel + GRPO adds frozen-head GRPO post-training. Both decode with 32 solver steps at guidance (3.5, 3.0).</p>
+      </div>
+      <div class="model-note">12 prompts · 8 systems</div>
+    </div>
+
+    <div class="dataset">
+      <div class="dataset-heading"><h3>Seed-TTS test-en</h3><span class="language-label">ENGLISH</span></div>
+      <div class="table-shell">
+      <table>
+        <thead><tr><th>Prompt</th><th>Text</th><th class="ours">VoxMel</th><th class="ours">VoxMel + GRPO</th><th>VoxCPM-Emilia</th><th>VoxCPM</th><th>MaskGCT</th><th>CosyVoice 2</th><th>IndexTTS 2</th></tr></thead>
+        <tbody>
+          <tr><td><audio controls preload="none" src="audio/en/13/prompt.wav"></audio></td><td class="text">After his execution Ogilvie's followers were rounded up and put in jail.</td><td class="ours"><audio controls preload="none" src="audio/en/13/VoxMel.wav"></audio></td><td class="ours"><audio controls preload="none" src="audio/en/13/VoxMel_GRPO.wav"></audio></td><td><audio controls preload="none" src="audio/en/13/VoxCPM-Emilia.wav"></audio></td><td><audio controls preload="none" src="audio/en/13/VoxCPM.wav"></audio></td><td><audio controls preload="none" src="audio/en/13/MaskGCT.wav"></audio></td><td><audio controls preload="none" src="audio/en/13/CosyVoice2.wav"></audio></td><td><audio controls preload="none" src="audio/en/13/IndexTTS2.wav"></audio></td></tr>
+          <tr><td><audio controls preload="none" src="audio/en/17/prompt.wav"></audio></td><td class="text">Rooftop Mounted for homes with no attics.</td><td class="ours"><audio controls preload="none" src="audio/en/17/VoxMel.wav"></audio></td><td class="ours"><audio controls preload="none" src="audio/en/17/VoxMel_GRPO.wav"></audio></td><td><audio controls preload="none" src="audio/en/17/VoxCPM-Emilia.wav"></audio></td><td><audio controls preload="none" src="audio/en/17/VoxCPM.wav"></audio></td><td><audio controls preload="none" src="audio/en/17/MaskGCT.wav"></audio></td><td><audio controls preload="none" src="audio/en/17/CosyVoice2.wav"></audio></td><td><audio controls preload="none" src="audio/en/17/IndexTTS2.wav"></audio></td></tr>
+          <tr><td><audio controls preload="none" src="audio/en/19/prompt.wav"></audio></td><td class="text">He later worked as a journalist, and then became a novelist and playwright.</td><td class="ours"><audio controls preload="none" src="audio/en/19/VoxMel.wav"></audio></td><td class="ours"><audio controls preload="none" src="audio/en/19/VoxMel_GRPO.wav"></audio></td><td><audio controls preload="none" src="audio/en/19/VoxCPM-Emilia.wav"></audio></td><td><audio controls preload="none" src="audio/en/19/VoxCPM.wav"></audio></td><td><audio controls preload="none" src="audio/en/19/MaskGCT.wav"></audio></td><td><audio controls preload="none" src="audio/en/19/CosyVoice2.wav"></audio></td><td><audio controls preload="none" src="audio/en/19/IndexTTS2.wav"></audio></td></tr>
+          <tr><td><audio controls preload="none" src="audio/en/23/prompt.wav"></audio></td><td class="text">Images of the pre-rendered cinematics also began to appear at this time.</td><td class="ours"><audio controls preload="none" src="audio/en/23/VoxMel.wav"></audio></td><td class="ours"><audio controls preload="none" src="audio/en/23/VoxMel_GRPO.wav"></audio></td><td><audio controls preload="none" src="audio/en/23/VoxCPM-Emilia.wav"></audio></td><td><audio controls preload="none" src="audio/en/23/VoxCPM.wav"></audio></td><td><audio controls preload="none" src="audio/en/23/MaskGCT.wav"></audio></td><td><audio controls preload="none" src="audio/en/23/CosyVoice2.wav"></audio></td><td><audio controls preload="none" src="audio/en/23/IndexTTS2.wav"></audio></td></tr>
+          <tr><td><audio controls preload="none" src="audio/en/26/prompt.wav"></audio></td><td class="text">Over time the couple has four more children, although William never warms to them.</td><td class="ours"><audio controls preload="none" src="audio/en/26/VoxMel.wav"></audio></td><td class="ours"><audio controls preload="none" src="audio/en/26/VoxMel_GRPO.wav"></audio></td><td><audio controls preload="none" src="audio/en/26/VoxCPM-Emilia.wav"></audio></td><td><audio controls preload="none" src="audio/en/26/VoxCPM.wav"></audio></td><td><audio controls preload="none" src="audio/en/26/MaskGCT.wav"></audio></td><td><audio controls preload="none" src="audio/en/26/CosyVoice2.wav"></audio></td><td><audio controls preload="none" src="audio/en/26/IndexTTS2.wav"></audio></td></tr>
+          <tr><td><audio controls preload="none" src="audio/en/29/prompt.wav"></audio></td><td class="text">Some transferred the conclusion to Ibsen, his translators and his director.</td><td class="ours"><audio controls preload="none" src="audio/en/29/VoxMel.wav"></audio></td><td class="ours"><audio controls preload="none" src="audio/en/29/VoxMel_GRPO.wav"></audio></td><td><audio controls preload="none" src="audio/en/29/VoxCPM-Emilia.wav"></audio></td><td><audio controls preload="none" src="audio/en/29/VoxCPM.wav"></audio></td><td><audio controls preload="none" src="audio/en/29/MaskGCT.wav"></audio></td><td><audio controls preload="none" src="audio/en/29/CosyVoice2.wav"></audio></td><td><audio controls preload="none" src="audio/en/29/IndexTTS2.wav"></audio></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="table-hint">Scroll horizontally to compare all systems.</p>
+    </div>
+
+    <div class="dataset">
+      <div class="dataset-heading"><h3>Seed-TTS test-zh</h3><span class="language-label">CHINESE</span></div>
+      <div class="table-shell">
+      <table>
+        <thead><tr><th>Prompt</th><th>Text</th><th class="ours">VoxMel</th><th class="ours">VoxMel + GRPO</th><th>VoxCPM-Emilia</th><th>VoxCPM</th><th>MaskGCT</th><th>CosyVoice 2</th><th>IndexTTS 2</th></tr></thead>
+        <tbody>
+          <tr><td><audio controls preload="none" src="audio/zh/17/prompt.wav"></audio></td><td class="text">因为眼前奥斯比约恩的鱼篓里，就躺着一个活生生的小人。</td><td class="ours"><audio controls preload="none" src="audio/zh/17/VoxMel.wav"></audio></td><td class="ours"><audio controls preload="none" src="audio/zh/17/VoxMel_GRPO.wav"></audio></td><td><audio controls preload="none" src="audio/zh/17/VoxCPM-Emilia.wav"></audio></td><td><audio controls preload="none" src="audio/zh/17/VoxCPM.wav"></audio></td><td><audio controls preload="none" src="audio/zh/17/MaskGCT.wav"></audio></td><td><audio controls preload="none" src="audio/zh/17/CosyVoice2.wav"></audio></td><td><audio controls preload="none" src="audio/zh/17/IndexTTS2.wav"></audio></td></tr>
+          <tr><td><audio controls preload="none" src="audio/zh/18/prompt.wav"></audio></td><td class="text">毒虫把毒品丢进马桶冲走，未料毒品又浮出水面，让警方逮个正着。</td><td class="ours"><audio controls preload="none" src="audio/zh/18/VoxMel.wav"></audio></td><td class="ours"><audio controls preload="none" src="audio/zh/18/VoxMel_GRPO.wav"></audio></td><td><audio controls preload="none" src="audio/zh/18/VoxCPM-Emilia.wav"></audio></td><td><audio controls preload="none" src="audio/zh/18/VoxCPM.wav"></audio></td><td><audio controls preload="none" src="audio/zh/18/MaskGCT.wav"></audio></td><td><audio controls preload="none" src="audio/zh/18/CosyVoice2.wav"></audio></td><td><audio controls preload="none" src="audio/zh/18/IndexTTS2.wav"></audio></td></tr>
+          <tr><td><audio controls preload="none" src="audio/zh/21/prompt.wav"></audio></td><td class="text">人们建造了一座带教堂的医院，奉献给圣约然。</td><td class="ours"><audio controls preload="none" src="audio/zh/21/VoxMel.wav"></audio></td><td class="ours"><audio controls preload="none" src="audio/zh/21/VoxMel_GRPO.wav"></audio></td><td><audio controls preload="none" src="audio/zh/21/VoxCPM-Emilia.wav"></audio></td><td><audio controls preload="none" src="audio/zh/21/VoxCPM.wav"></audio></td><td><audio controls preload="none" src="audio/zh/21/MaskGCT.wav"></audio></td><td><audio controls preload="none" src="audio/zh/21/CosyVoice2.wav"></audio></td><td><audio controls preload="none" src="audio/zh/21/IndexTTS2.wav"></audio></td></tr>
+          <tr><td><audio controls preload="none" src="audio/zh/38/prompt.wav"></audio></td><td class="text">本文旨在以苏联解体后，陆续解密的档案材料为根据。</td><td class="ours"><audio controls preload="none" src="audio/zh/38/VoxMel.wav"></audio></td><td class="ours"><audio controls preload="none" src="audio/zh/38/VoxMel_GRPO.wav"></audio></td><td><audio controls preload="none" src="audio/zh/38/VoxCPM-Emilia.wav"></audio></td><td><audio controls preload="none" src="audio/zh/38/VoxCPM.wav"></audio></td><td><audio controls preload="none" src="audio/zh/38/MaskGCT.wav"></audio></td><td><audio controls preload="none" src="audio/zh/38/CosyVoice2.wav"></audio></td><td><audio controls preload="none" src="audio/zh/38/IndexTTS2.wav"></audio></td></tr>
+          <tr><td><audio controls preload="none" src="audio/zh/45/prompt.wav"></audio></td><td class="text">在妙手盘丝环节中，男嘉宾需要两位尖果选手盘发。</td><td class="ours"><audio controls preload="none" src="audio/zh/45/VoxMel.wav"></audio></td><td class="ours"><audio controls preload="none" src="audio/zh/45/VoxMel_GRPO.wav"></audio></td><td><audio controls preload="none" src="audio/zh/45/VoxCPM-Emilia.wav"></audio></td><td><audio controls preload="none" src="audio/zh/45/VoxCPM.wav"></audio></td><td><audio controls preload="none" src="audio/zh/45/MaskGCT.wav"></audio></td><td><audio controls preload="none" src="audio/zh/45/CosyVoice2.wav"></audio></td><td><audio controls preload="none" src="audio/zh/45/IndexTTS2.wav"></audio></td></tr>
+          <tr><td><audio controls preload="none" src="audio/zh/58/prompt.wav"></audio></td><td class="text">一点五公里后，右转驶入京藏高速辅路。</td><td class="ours"><audio controls preload="none" src="audio/zh/58/VoxMel.wav"></audio></td><td class="ours"><audio controls preload="none" src="audio/zh/58/VoxMel_GRPO.wav"></audio></td><td><audio controls preload="none" src="audio/zh/58/VoxCPM-Emilia.wav"></audio></td><td><audio controls preload="none" src="audio/zh/58/VoxCPM.wav"></audio></td><td><audio controls preload="none" src="audio/zh/58/MaskGCT.wav"></audio></td><td><audio controls preload="none" src="audio/zh/58/CosyVoice2.wav"></audio></td><td><audio controls preload="none" src="audio/zh/58/IndexTTS2.wav"></audio></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="table-hint">Scroll horizontally to compare all systems.</p>
+    </div>
+  </section>
+
+  <section id="voice-cloning">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">Voice Cloning</span>
+        <h2>Same-Language &amp; Cross-Lingual Comparison</h2>
+        <p class="section-description">Each reference voice is used for both same-language and cross-lingual synthesis. Compare how VoxMel preserves speaker identity while switching between Chinese and English.</p>
+      </div>
+      <div class="model-note">6 prompts · 12 samples</div>
+    </div>
+
+    <div class="dataset">
+      <div class="dataset-heading"><h3>English reference voices</h3><span class="language-label">EN → EN / ZH</span></div>
+      <div class="table-shell">
+      <table>
+        <thead><tr><th>Reference prompt</th><th>Same-language text (EN)</th><th>VoxMel · Same</th><th>Cross-lingual text (ZH)</th><th>VoxMel · Cross</th></tr></thead>
+        <tbody>
+          <tr><td><audio controls preload="none" src="audio/zero_shot/en_01_prompt.wav"></audio></td><td class="text">I don't really care what you call me. I've been a silent spectator, watching species evolve, empires rise and fall. But always remember, I am mighty and enduring. Respect me and I'll nurture you; ignore me and you shall face the consequences.</td><td class="ours"><audio controls preload="none" src="audio/zero_shot/en_01_same.wav"></audio></td><td class="text">顿时，气氛变得沉郁起来。乍看之下，一切的困扰仿佛都围绕在我身边。我皱着眉头，感受着那份压力，但我知道我不能放弃，不能认输。于是，我深吸一口气，心底的声音告诉我：“无论如何，都要冷静下来，重新开始。”</td><td class="ours"><audio controls preload="none" src="audio/zero_shot/en_01_cross.wav"></audio></td></tr>
+          <tr><td><audio controls preload="none" src="audio/zero_shot/en_02_prompt.wav"></audio></td><td class="text">Perhaps they are driven by the delicious blend of flavors, or it could be the appealing visual presentation. At the end of the day, our choices in food reflect our personal preferences and sometimes, even our lifestyle or belief system.</td><td class="ours"><audio controls preload="none" src="audio/zero_shot/en_02_same.wav"></audio></td><td class="text">我抬起头，坚定地说：“身高不能决定一切，这世界在看我，我更看得到世界。无论是北上广，或是别的什么，我都将以我自己的方式去攀爬，去追逐。我可能小，但我绝不会被忽视。”</td><td class="ours"><audio controls preload="none" src="audio/zero_shot/en_02_cross.wav"></audio></td></tr>
+          <tr><td><audio controls preload="none" src="audio/zero_shot/en_03_prompt.wav"></audio></td><td class="text">Your safety and the pack's reputation are at stake. Your bravery is admirable, but sometimes bravery is knowing when to retreat. Please, consider returning with me. We can work out a plan, but only if you're willing to listen.</td><td class="ours"><audio controls preload="none" src="audio/zero_shot/en_03_same.wav"></audio></td><td class="text">你的勇敢令人钦佩，但有时候勇敢在于懂得何时撤退。拜托，考虑一下和我一起回去吧。我们可以制定一个计划，但前提是你愿意倾听。</td><td class="ours"><audio controls preload="none" src="audio/zero_shot/en_03_cross.wav"></audio></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="dataset">
+      <div class="dataset-heading"><h3>Chinese reference voices</h3><span class="language-label">ZH → ZH / EN</span></div>
+      <div class="table-shell">
+      <table>
+        <thead><tr><th>Reference prompt</th><th>Same-language text (ZH)</th><th>VoxMel · Same</th><th>Cross-lingual text (EN)</th><th>VoxMel · Cross</th></tr></thead>
+        <tbody>
+          <tr><td><audio controls preload="none" src="audio/zero_shot/zh_01_prompt.wav"></audio></td><td class="text">我看着他们，意气风发地挺直了胸膛，甩了甩那稍显肉感的双臂，轻笑道：“我身上的肉，是为了掩饰我爆棚的魅力，否则，岂不吓坏了你们呢？”</td><td class="ours"><audio controls preload="none" src="audio/zero_shot/zh_01_same.wav"></audio></td><td class="text">Suddenly, there was a burst of laughter beside me. I looked at them, stood up straight with high spirit, shook the slightly fleshy arms, and smiled lightly, saying, “The flesh on my body is to hide my bursting charm. Otherwise, wouldn't it scare you?”</td><td class="ours"><audio controls preload="none" src="audio/zero_shot/zh_01_cross.wav"></audio></td></tr>
+          <tr><td><audio controls preload="none" src="audio/zero_shot/zh_02_prompt.wav"></audio></td><td class="text">顿时，气氛变得沉郁起来。乍看之下，一切的困扰仿佛都围绕在我身边。我皱着眉头，感受着那份压力，但我知道我不能放弃，不能认输。于是，我深吸一口气，心底的声音告诉我：“无论如何，都要冷静下来，重新开始。”</td><td class="ours"><audio controls preload="none" src="audio/zero_shot/zh_02_same.wav"></audio></td><td class="text">Suddenly, the atmosphere became gloomy. At first glance, all the troubles seemed to surround me. I frowned, feeling that pressure, but I know I can't give up, can't admit defeat. So, I took a deep breath, and the voice in my heart told me, “Anyway, must calm down and start again.”</td><td class="ours"><audio controls preload="none" src="audio/zero_shot/zh_02_cross.wav"></audio></td></tr>
+          <tr><td><audio controls preload="none" src="audio/zero_shot/zh_03_prompt.wav"></audio></td><td class="text">皇上的面色未变，宛如雕塑般静止，他的眼中闪过一丝动人的温度。他深深地看了那位忠心耿耿的臣子一眼，终于开口：“诺，我会再考虑考虑的。”他的声音低沉且坚定，留下空气中隐隐的无奈与柔情。</td><td class="ours"><audio controls preload="none" src="audio/zero_shot/zh_03_same.wav"></audio></td><td class="text">The emperor's complexion did not change, remaining as still as a sculpture, and a touch of touching warmth flashed in his eyes. He deeply glanced at the loyal minister, and finally spoke: “Well, I will consider it again.” His voice was low and firm, leaving a faint hint of helplessness and tenderness in the air.</td><td class="ours"><audio controls preload="none" src="audio/zero_shot/zh_03_cross.wav"></audio></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="table-hint">Scroll horizontally to compare same-language and cross-lingual outputs.</p>
+    </div>
+  </section>
+
+  <section id="samples">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">Listen &amp; Explore</span>
+        <h2>More Synthesized Samples</h2>
+        <p class="section-description">Additional expressive zero-shot synthesis samples. Each card includes the reference prompt, generated speech, and switchable waveform and Mel-spectrogram views.</p>
+      </div>
+      <div class="model-note">12 samples · Waveform + Mel</div>
+    </div>
+    <div class="samples-toolbar">
+      <div class="filters" role="group" aria-label="Filter samples by language">
+        <button class="filter-btn active" data-filter="all" type="button">All samples</button>
+        <button class="filter-btn" data-filter="en" type="button">English</button>
+        <button class="filter-btn" data-filter="zh" type="button">中文</button>
+      </div>
+      <span class="samples-count" id="samples-count">Showing 12 samples</span>
+    </div>
+    <div class="sample-grid">
+      <article class="sample-card" data-lang="en">
+        <div class="card-head"><span class="sample-id">English · 01</span><span class="emotion">Happy</span></div>
+        <p class="sample-text">I never thought I’d see you here again, but now that you’re standing in front of me, all those old memories suddenly feel wonderful.</p>
+        <div class="audio-pair"><div class="audio-field"><label>Reference prompt</label><audio controls preload="none" src="audio/emo_eval/en/en_act1_happy/prompt.wav"></audio></div><div class="audio-field"><label>VoxMel</label><audio controls preload="none" src="audio/emo_eval/en/en_act1_happy/VoxMel.wav"></audio></div></div>
+        <div class="visual"><div class="visual-bar"><span class="visual-label">Output visualization</span><div class="view-switch"><button class="view-btn active" data-view="waveform" type="button">Waveform</button><button class="view-btn" data-view="mel" type="button">Mel</button></div></div><img src="audio/emo_eval/en/en_act1_happy/waveform.png" alt="Waveform of English happy sample" loading="lazy"><img src="audio/emo_eval/en/en_act1_happy/mel.png" alt="Mel spectrogram of English happy sample" loading="lazy" hidden></div>
+      </article>
+      <article class="sample-card" data-lang="en">
+        <div class="card-head"><span class="sample-id">English · 02</span><span class="emotion">Disgust</span></div>
+        <p class="sample-text">So you finally decided to come back. After everything you did, do you really expect me to stand here and pretend nothing happened?</p>
+        <div class="audio-pair"><div class="audio-field"><label>Reference prompt</label><audio controls preload="none" src="audio/emo_eval/en/en_act1_disgust/prompt.wav"></audio></div><div class="audio-field"><label>VoxMel</label><audio controls preload="none" src="audio/emo_eval/en/en_act1_disgust/VoxMel.wav"></audio></div></div>
+        <div class="visual"><div class="visual-bar"><span class="visual-label">Output visualization</span><div class="view-switch"><button class="view-btn active" data-view="waveform" type="button">Waveform</button><button class="view-btn" data-view="mel" type="button">Mel</button></div></div><img src="audio/emo_eval/en/en_act1_disgust/waveform.png" alt="Waveform of English disgust sample" loading="lazy"><img src="audio/emo_eval/en/en_act1_disgust/mel.png" alt="Mel spectrogram of English disgust sample" loading="lazy" hidden></div>
+      </article>
+      <article class="sample-card" data-lang="en">
+        <div class="card-head"><span class="sample-id">English · 03</span><span class="emotion">Neutral</span></div>
+        <p class="sample-text">They told me this place was empty, but there is a light in the front room, and I can hear someone moving quietly inside.</p>
+        <div class="audio-pair"><div class="audio-field"><label>Reference prompt</label><audio controls preload="none" src="audio/emo_eval/en/en_act4_neutral/prompt.wav"></audio></div><div class="audio-field"><label>VoxMel</label><audio controls preload="none" src="audio/emo_eval/en/en_act4_neutral/VoxMel.wav"></audio></div></div>
+        <div class="visual"><div class="visual-bar"><span class="visual-label">Output visualization</span><div class="view-switch"><button class="view-btn active" data-view="waveform" type="button">Waveform</button><button class="view-btn" data-view="mel" type="button">Mel</button></div></div><img src="audio/emo_eval/en/en_act4_neutral/waveform.png" alt="Waveform of English neutral sample" loading="lazy"><img src="audio/emo_eval/en/en_act4_neutral/mel.png" alt="Mel spectrogram of English neutral sample" loading="lazy" hidden></div>
+      </article>
+      <article class="sample-card" data-lang="en">
+        <div class="card-head"><span class="sample-id">English · 04</span><span class="emotion">Disgust</span></div>
+        <p class="sample-text">Someone has been living in this filthy place all along. The smell is unbearable, and those marks on the walls make me sick.</p>
+        <div class="audio-pair"><div class="audio-field"><label>Reference prompt</label><audio controls preload="none" src="audio/emo_eval/en/en_act4_disgust/prompt.wav"></audio></div><div class="audio-field"><label>VoxMel</label><audio controls preload="none" src="audio/emo_eval/en/en_act4_disgust/VoxMel.wav"></audio></div></div>
+        <div class="visual"><div class="visual-bar"><span class="visual-label">Output visualization</span><div class="view-switch"><button class="view-btn active" data-view="waveform" type="button">Waveform</button><button class="view-btn" data-view="mel" type="button">Mel</button></div></div><img src="audio/emo_eval/en/en_act4_disgust/waveform.png" alt="Waveform of English disgust sample" loading="lazy"><img src="audio/emo_eval/en/en_act4_disgust/mel.png" alt="Mel spectrogram of English disgust sample" loading="lazy" hidden></div>
+      </article>
+      <article class="sample-card" data-lang="en">
+        <div class="card-head"><span class="sample-id">English · 05</span><span class="emotion">Angry</span></div>
+        <p class="sample-text">Look around at everything we built together. You don’t get to tear it apart now, and I’m certainly not walking away just because you told me to.</p>
+        <div class="audio-pair"><div class="audio-field"><label>Reference prompt</label><audio controls preload="none" src="audio/emo_eval/en/en_act9_angry/prompt.wav"></audio></div><div class="audio-field"><label>VoxMel</label><audio controls preload="none" src="audio/emo_eval/en/en_act9_angry/VoxMel.wav"></audio></div></div>
+        <div class="visual"><div class="visual-bar"><span class="visual-label">Output visualization</span><div class="view-switch"><button class="view-btn active" data-view="waveform" type="button">Waveform</button><button class="view-btn" data-view="mel" type="button">Mel</button></div></div><img src="audio/emo_eval/en/en_act9_angry/waveform.png" alt="Waveform of English angry sample" loading="lazy"><img src="audio/emo_eval/en/en_act9_angry/mel.png" alt="Mel spectrogram of English angry sample" loading="lazy" hidden></div>
+      </article>
+      <article class="sample-card" data-lang="en">
+        <div class="card-head"><span class="sample-id">English · 06</span><span class="emotion">Calm</span></div>
+        <p class="sample-text">The last train is leaving, so take your time and tell me what you came here to say. I’ll listen before you go.</p>
+        <div class="audio-pair"><div class="audio-field"><label>Reference prompt</label><audio controls preload="none" src="audio/emo_eval/en/en_act20_calm/prompt.wav"></audio></div><div class="audio-field"><label>VoxMel</label><audio controls preload="none" src="audio/emo_eval/en/en_act20_calm/VoxMel.wav"></audio></div></div>
+        <div class="visual"><div class="visual-bar"><span class="visual-label">Output visualization</span><div class="view-switch"><button class="view-btn active" data-view="waveform" type="button">Waveform</button><button class="view-btn" data-view="mel" type="button">Mel</button></div></div><img src="audio/emo_eval/en/en_act20_calm/waveform.png" alt="Waveform of English calm sample" loading="lazy"><img src="audio/emo_eval/en/en_act20_calm/mel.png" alt="Mel spectrogram of English calm sample" loading="lazy" hidden></div>
+      </article>
+      <article class="sample-card" data-lang="zh">
+        <div class="card-head"><span class="sample-id">Chinese · 01</span><span class="emotion">Sad</span></div>
+        <p class="sample-text">我习惯每天这个时候来这里坐一会儿，看看路过的人，等街边的灯一盏一盏亮起来。</p>
+        <div class="audio-pair"><div class="audio-field"><label>Reference prompt</label><audio controls preload="none" src="audio/emo_eval/zh/uncle_fu_sad/prompt.wav"></audio></div><div class="audio-field"><label>VoxMel</label><audio controls preload="none" src="audio/emo_eval/zh/uncle_fu_sad/VoxMel.wav"></audio></div></div>
+        <div class="visual"><div class="visual-bar"><span class="visual-label">Output visualization</span><div class="view-switch"><button class="view-btn active" data-view="waveform" type="button">Waveform</button><button class="view-btn" data-view="mel" type="button">Mel</button></div></div><img src="audio/emo_eval/zh/uncle_fu_sad/waveform.png" alt="Waveform of Chinese sad sample" loading="lazy"><img src="audio/emo_eval/zh/uncle_fu_sad/mel.png" alt="Mel spectrogram of Chinese sad sample" loading="lazy" hidden></div>
+      </article>
+      <article class="sample-card" data-lang="zh">
+        <div class="card-head"><span class="sample-id">Chinese · 02</span><span class="emotion">Neutral</span></div>
+        <p class="sample-text">我习惯每天这个时候来这里坐一会儿，看看路过的人，等街边的灯一盏一盏亮起来。</p>
+        <div class="audio-pair"><div class="audio-field"><label>Reference prompt</label><audio controls preload="none" src="audio/emo_eval/zh/zh_neutral_039/prompt.wav"></audio></div><div class="audio-field"><label>VoxMel</label><audio controls preload="none" src="audio/emo_eval/zh/zh_neutral_039/VoxMel.wav"></audio></div></div>
+        <div class="visual"><div class="visual-bar"><span class="visual-label">Output visualization</span><div class="view-switch"><button class="view-btn active" data-view="waveform" type="button">Waveform</button><button class="view-btn" data-view="mel" type="button">Mel</button></div></div><img src="audio/emo_eval/zh/zh_neutral_039/waveform.png" alt="Waveform of Chinese neutral sample" loading="lazy"><img src="audio/emo_eval/zh/zh_neutral_039/mel.png" alt="Mel spectrogram of Chinese neutral sample" loading="lazy" hidden></div>
+      </article>
+      <article class="sample-card" data-lang="zh">
+        <div class="card-head"><span class="sample-id">Chinese · 03</span><span class="emotion">Happy</span></div>
+        <p class="sample-text">你看，我们真的做到了。以前觉得不可能的事，现在就在眼前，我简直想把这个好消息告诉所有人。</p>
+        <div class="audio-pair"><div class="audio-field"><label>Reference prompt</label><audio controls preload="none" src="audio/emo_eval/zh/zh_happy_001/prompt.wav"></audio></div><div class="audio-field"><label>VoxMel</label><audio controls preload="none" src="audio/emo_eval/zh/zh_happy_001/VoxMel.wav"></audio></div></div>
+        <div class="visual"><div class="visual-bar"><span class="visual-label">Output visualization</span><div class="view-switch"><button class="view-btn active" data-view="waveform" type="button">Waveform</button><button class="view-btn" data-view="mel" type="button">Mel</button></div></div><img src="audio/emo_eval/zh/zh_happy_001/waveform.png" alt="Waveform of Chinese happy sample" loading="lazy"><img src="audio/emo_eval/zh/zh_happy_001/mel.png" alt="Mel spectrogram of Chinese happy sample" loading="lazy" hidden></div>
+      </article>
+      <article class="sample-card" data-lang="zh">
+        <div class="card-head"><span class="sample-id">Chinese · 04</span><span class="emotion">Sad</span></div>
+        <p class="sample-text">那张车票我一直留着，可我们现在连好好说一句话，都变得这么难。</p>
+        <div class="audio-pair"><div class="audio-field"><label>Reference prompt</label><audio controls preload="none" src="audio/emo_eval/zh/zh_sad_001/prompt.wav"></audio></div><div class="audio-field"><label>VoxMel</label><audio controls preload="none" src="audio/emo_eval/zh/zh_sad_001/VoxMel.wav"></audio></div></div>
+        <div class="visual"><div class="visual-bar"><span class="visual-label">Output visualization</span><div class="view-switch"><button class="view-btn active" data-view="waveform" type="button">Waveform</button><button class="view-btn" data-view="mel" type="button">Mel</button></div></div><img src="audio/emo_eval/zh/zh_sad_001/waveform.png" alt="Waveform of Chinese sad sample" loading="lazy"><img src="audio/emo_eval/zh/zh_sad_001/mel.png" alt="Mel spectrogram of Chinese sad sample" loading="lazy" hidden></div>
+      </article>
+      <article class="sample-card" data-lang="zh">
+        <div class="card-head"><span class="sample-id">Chinese · 05</span><span class="emotion">Angry</span></div>
+        <p class="sample-text">我已经一次次向你们反映，可你们谁都不管！我们努力了这么久，难道最后连一个解释都不配得到吗？</p>
+        <div class="audio-pair"><div class="audio-field"><label>Reference prompt</label><audio controls preload="none" src="audio/emo_eval/zh/zh_angry_001/prompt.wav"></audio></div><div class="audio-field"><label>VoxMel</label><audio controls preload="none" src="audio/emo_eval/zh/zh_angry_001/VoxMel.wav"></audio></div></div>
+        <div class="visual"><div class="visual-bar"><span class="visual-label">Output visualization</span><div class="view-switch"><button class="view-btn active" data-view="waveform" type="button">Waveform</button><button class="view-btn" data-view="mel" type="button">Mel</button></div></div><img src="audio/emo_eval/zh/zh_angry_001/waveform.png" alt="Waveform of Chinese angry sample" loading="lazy"><img src="audio/emo_eval/zh/zh_angry_001/mel.png" alt="Mel spectrogram of Chinese angry sample" loading="lazy" hidden></div>
+      </article>
+      <article class="sample-card" data-lang="zh">
+        <div class="card-head"><span class="sample-id">Chinese · 06</span><span class="emotion">Angry</span></div>
+        <p class="sample-text">他的性格你又不是不了解，他根本不会通融。可这不是你们逃避责任的理由，今天必须给我一个交代。</p>
+        <div class="audio-pair"><div class="audio-field"><label>Reference prompt</label><audio controls preload="none" src="audio/emo_eval/zh/zh_angry_002/prompt.wav"></audio></div><div class="audio-field"><label>VoxMel</label><audio controls preload="none" src="audio/emo_eval/zh/zh_angry_002/VoxMel.wav"></audio></div></div>
+        <div class="visual"><div class="visual-bar"><span class="visual-label">Output visualization</span><div class="view-switch"><button class="view-btn active" data-view="waveform" type="button">Waveform</button><button class="view-btn" data-view="mel" type="button">Mel</button></div></div><img src="audio/emo_eval/zh/zh_angry_002/waveform.png" alt="Waveform of Chinese angry sample" loading="lazy"><img src="audio/emo_eval/zh/zh_angry_002/mel.png" alt="Mel spectrogram of Chinese angry sample" loading="lazy" hidden></div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer><div class="container footer-inner"><span>VoxMel · Audio Samples</span><span>Wavelet-Factorized Autoregressive Mel-Spectrogram Modeling</span></div></footer>
+<script>
+  document.querySelectorAll('.view-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      const visual = button.closest('.visual');
+      visual.querySelectorAll('.view-btn').forEach((item) => item.classList.toggle('active', item === button));
+      visual.querySelectorAll('img').forEach((image) => {
+        image.hidden = !image.src.endsWith(`/${button.dataset.view}.png`);
+      });
+    });
+  });
+
+  document.querySelectorAll('.filter-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      const filter = button.dataset.filter;
+      let count = 0;
+      document.querySelectorAll('.filter-btn').forEach((item) => item.classList.toggle('active', item === button));
+      document.querySelectorAll('.sample-card').forEach((card) => {
+        const visible = filter === 'all' || card.dataset.lang === filter;
+        card.hidden = !visible;
+        if (visible) count += 1;
+      });
+      document.getElementById('samples-count').textContent = `Showing ${count} samples`;
+    });
+  });
+
+  document.querySelectorAll('audio').forEach((audio) => {
+    audio.addEventListener('play', () => {
+      document.querySelectorAll('audio').forEach((other) => {
+        if (other !== audio) other.pause();
+      });
+    });
+  });
+</script>
+</body>
+</html>
