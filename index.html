@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="VoxMel: Wavelet-Factorized Autoregressive Mel-Spectrogram Modeling for Zero-Shot Speech Synthesis. Listen to audio samples and explore generated waveforms and Mel spectrograms.">
+<meta name="description" content="VoxMel: Wavelet-Factorized Autoregressive Mel-Spectrogram Modeling for Zero-Shot Speech Synthesis. Listen to audio samples and explore generated waveforms.">
 <title>VoxMel — Zero-Shot Speech Synthesis</title>
 <style>
   :root {
@@ -65,6 +65,50 @@
   .hero-title { max-width: 670px; margin: 0; font-size: clamp(22px, 2.5vw, 31px); line-height: 1.27; letter-spacing: -.025em; font-weight: 520; }
   .hero-title em { color: var(--accent); font-style: normal; }
   .hero-copy { max-width: 620px; margin: 24px 0 0; color: var(--muted); font-size: 16px; }
+  .project-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .project-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 1px solid #dcd7fa;
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--accent-dark);
+    font-size: 14px;
+    font-weight: 650;
+    text-decoration: none;
+  }
+  .project-link:hover { background: var(--accent-soft); }
+  .project-link--github {
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
+    color: #fff;
+  }
+  .project-link--github:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .project-link:focus-visible {
+    outline: 2px solid var(--accent-dark);
+    outline-offset: 3px;
+  }
+  .project-link-icon {
+    display: block;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    font-size: 17px;
+    line-height: 18px;
+    text-align: center;
+  }
   .hero-tags { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 28px; }
   .hero-tags span { padding: 6px 12px; border: 1px solid #dedfeb; border-radius: 100px; color: #555b74; background: rgba(255,255,255,.65); font-size: 12px; }
   .hero-visual { height: 240px; display: flex; align-items: center; justify-content: center; gap: 7px; }
@@ -172,6 +216,18 @@
       <h1>VoxMel</h1>
       <p class="hero-title">Wavelet-Factorized Autoregressive <em>Mel-Spectrogram Modeling</em> for Zero-Shot Speech Synthesis</p>
       <p class="hero-copy">Explore zero-shot voice cloning and expressive speech synthesis. Listen to the generated audio and inspect its waveform and Mel spectrogram.</p>
+      <nav class="project-links" aria-label="VoxMel resources">
+        <a class="project-link project-link--github" href="https://github.com/VoxDance-Lab/VoxMel" target="_blank" rel="noopener noreferrer">
+          <svg class="project-link-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.65 7.65 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+          </svg>
+          GitHub
+        </a>
+        <a class="project-link" href="https://huggingface.co/VoxDance-Lab" target="_blank" rel="noopener noreferrer">
+          <span class="project-link-icon" aria-hidden="true">🤗</span>
+          Hugging Face
+        </a>
+      </nav>
       <div class="hero-tags"><span>Zero-Shot TTS</span><span>Voice Cloning</span><span>Expressive Speech</span><span>Multilingual</span></div>
     </div>
     <div class="hero-visual" aria-hidden="true">
